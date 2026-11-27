@@ -16,6 +16,8 @@
       --danger: #c62828;
       --success-bg: #e8f5e9;
       --success-text: #1b5e20;
+      --order-bg: #eef4ff;
+      --order-text: #1245b8;
     }
     * { box-sizing: border-box; }
     body {
@@ -54,6 +56,7 @@
     }
     @media (min-width: 600px) {
       .grid-2 { grid-template-columns: 1fr 1fr; }
+      .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
     }
     label {
       display: block;
@@ -74,6 +77,29 @@
     textarea {
       min-height: 76px;
       resize: vertical;
+    }
+    .calc-box {
+      background: #f8faff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .calc-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.92rem;
+      margin: 4px 0;
+    }
+    .calc-total {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary);
+      border-top: 1px solid var(--border);
+      padding-top: 6px;
+      margin-top: 6px;
     }
     .actions {
       display: flex;
@@ -104,6 +130,35 @@
       padding: 7px 11px;
       font-size: 0.84rem;
     }
+    .btn-small {
+      background: #eef3ff;
+      color: var(--primary);
+      padding: 7px 11px;
+      font-size: 0.84rem;
+    }
+    .btn-order {
+      background: #e6f4ea;
+      color: #137333;
+      padding: 7px 11px;
+      font-size: 0.84rem;
+    }
+    .status-msg {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      display: none;
+    }
+    .status-ok {
+      display: block;
+      background: var(--success-bg);
+      color: var(--success-text);
+    }
+    .status-err {
+      display: block;
+      background: #fdecec;
+      color: var(--danger);
+    }
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -114,6 +169,11 @@
     }
     .search-box {
       flex: 1 1 220px;
+    }
+    .summary {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 12px;
     }
     .visit-item {
       border: 1px solid var(--border);
@@ -144,6 +204,16 @@
       border-radius: 999px;
       white-space: nowrap;
     }
+    .badge-order {
+      display: inline-block;
+      background: var(--order-bg);
+      color: var(--order-text);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      margin-left: 6px;
+    }
     .meta-line {
       font-size: 0.9rem;
       margin: 4px 0;
@@ -172,7 +242,7 @@
 <body>
   <div class="container">
     <h1>Visitas Clientes</h1>
-    <p class="subtitle">Registro de contactos, cotizaciones, requerimientos y calendario de visitas.</p>
+    <p class="subtitle">Registro de clientes, RUT, contactos, cotizaciones, pedidos con IVA y calendario de visitas.</p>
 
     <div class="card">
       <form id="visitForm">
@@ -180,6 +250,14 @@
           <div>
             <label for="cliente">Cliente / Empresa *</label>
             <input id="cliente" type="text" required placeholder="Ej. Constructora Sur" />
+          </div>
+          <div>
+            <label for="rutCliente">RUT del cliente</label>
+            <input id="rutCliente" type="text" placeholder="Ej. 76.543.210-9" />
+          </div>
+          <div>
+            <label for="nombreContacto">Nombre del contacto</label>
+            <input id="nombreContacto" type="text" placeholder="Ej. Camila Rojas" />
           </div>
           <div>
             <label for="fechaVisita">Fecha y hora de visita (Calendario) *</label>
@@ -198,13 +276,46 @@
             <input id="direccion" type="text" placeholder="Av. Principal 123, Osorno" />
           </div>
           <div>
-            <label for="cotizacion">Cotización ($ / detalle breve)</label>
-            <input id="cotizacion" type="text" placeholder="Ej. $450.000 - Mantención" />
+            <label for="cotizacion">Cotización (detalle breve)</label>
+            <input id="cotizacion" type="text" placeholder="Ej. Mantención preventiva mensual" />
+          </div>
+        </div>
+
+        <div class="calc-box">
+          <div class="grid grid-2">
+            <div>
+              <label for="montoNeto">Monto Neto ($)</label>
+              <input id="montoNeto" type="number" min="0" step="1" placeholder="Ej. 450000" />
+            </div>
+            <div>
+              <label for="aplicarIva">Impuesto (IVA 19%)</label>
+              <select id="aplicarIva">
+                <option value="si" selected>Incluir IVA (19%)</option>
+                <option value="no">Sin IVA / Exento</option>
+              </select>
+            </div>
+          </div>
+          <div class="calc-line">
+            <span>Neto:</span>
+            <span id="previewNeto">$0</span>
+          </div>
+          <div class="calc-line">
+            <span>IVA (19%):</span>
+            <span id="previewIva">$0</span>
+          </div>
+          <div class="calc-total">
+            <span>Total Orden:</span>
+            <span id="previewTotal">$0</span>
           </div>
         </div>
 
         <div style="margin-top: 12px;">
-          <label for="requerimientos">Requerimientos</label>
+          <label for="pedido">Pedido / Detalle para orden de venta</label>
+          <textarea id="pedido" placeholder="Indica productos, servicios, cantidades o condiciones del pedido..."></textarea>
+        </div>
+
+        <div style="margin-top: 12px;">
+          <label for="requerimientos">Requerimientos / Notas de visita</label>
           <textarea id="requerimientos" placeholder="Escribe aquí lo que necesita el cliente, acuerdos o notas de la visita..."></textarea>
         </div>
 
@@ -214,36 +325,81 @@
           <button type="button" id="btnImportTrigger" class="btn-secondary">Importar respaldo</button>
           <input id="importFile" type="file" accept="application/json" style="display:none;" />
         </div>
+        <div id="statusMsg" class="status-msg" role="status" aria-live="polite"></div>
       </form>
     </div>
 
     <div class="card">
       <div class="toolbar">
-        <input id="buscador" class="search-box" type="search" placeholder="Buscar por cliente, correo, dirección o requerimiento..." />
+        <input id="buscador" class="search-box" type="search" placeholder="Buscar por cliente, RUT, contacto, pedido o requerimiento..." />
         <select id="filtroFecha" style="max-width: 210px;">
           <option value="todas">Todas las visitas</option>
           <option value="proximas">Próximas (desde hoy)</option>
           <option value="pasadas">Anteriores</option>
         </select>
       </div>
+      <div id="resumenVisitas" class="summary"></div>
       <div id="listaVisitas"></div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = "visitas_clientes_data_v1";
+    const STORAGE_KEY = "visitas_clientes_data_v3";
+    const IVA_RATE = 0.19;
+
     const form = document.getElementById("visitForm");
     const lista = document.getElementById("listaVisitas");
+    const resumen = document.getElementById("resumenVisitas");
     const buscador = document.getElementById("buscador");
     const filtroFecha = document.getElementById("filtroFecha");
     const btnExport = document.getElementById("btnExport");
     const btnImportTrigger = document.getElementById("btnImportTrigger");
     const importFile = document.getElementById("importFile");
+    const statusMsg = document.getElementById("statusMsg");
+
+    const montoNetoInput = document.getElementById("montoNeto");
+    const aplicarIvaSelect = document.getElementById("aplicarIva");
+    const previewNeto = document.getElementById("previewNeto");
+    const previewIva = document.getElementById("previewIva");
+    const previewTotal = document.getElementById("previewTotal");
+
+    function calcularMontos(netoRaw, incluirIva) {
+      const neto = Math.max(0, Number(netoRaw) || 0);
+      const iva = incluirIva ? Math.round(neto * IVA_RATE) : 0;
+      const total = neto + iva;
+      return { neto, iva, total };
+    }
+
+    function formatoPesos(valor) {
+      return Number(valor || 0).toLocaleString("es-CL", {
+        style: "currency",
+        currency: "CLP",
+        maximumFractionDigits: 0
+      });
+    }
+
+    function actualizarVistaPreviaMontos() {
+      const incluirIva = aplicarIvaSelect.value === "si";
+      const { neto, iva, total } = calcularMontos(montoNetoInput.value, incluirIva);
+      previewNeto.textContent = formatoPesos(neto);
+      previewIva.textContent = formatoPesos(iva);
+      previewTotal.textContent = formatoPesos(total);
+    }
+
+    montoNetoInput.addEventListener("input", actualizarVistaPreviaMontos);
+    aplicarIvaSelect.addEventListener("change", actualizarVistaPreviaMontos);
+    actualizarVistaPreviaMontos();
+
+    function mostrarEstado(mensaje, esError = false) {
+      statusMsg.textContent = mensaje;
+      statusMsg.className = "status-msg " + (esError ? "status-err" : "status-ok");
+    }
 
     function cargarVisitas() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
       } catch (e) {
         return [];
       }
@@ -271,6 +427,236 @@
         .replace(/"/g, "&quot;");
     }
 
+    function escaparICS(str) {
+      return String(str || "")
+        .replace(/\\/g, "\\\\")
+        .replace(/\n/g, "\\n")
+        .replace(/,/g, "\\,")
+        .replace(/;/g, "\\;");
+    }
+
+    function formatoICSFecha(fechaLocal) {
+      const d = new Date(fechaLocal);
+      if (isNaN(d.getTime())) return null;
+      const pad = (n) => String(n).padStart(2, "0");
+      return (
+        d.getUTCFullYear() +
+        pad(d.getUTCMonth() + 1) +
+        pad(d.getUTCDate()) +
+        "T" +
+        pad(d.getUTCHours()) +
+        pad(d.getUTCMinutes()) +
+        pad(d.getUTCSeconds()) +
+        "Z"
+      );
+    }
+
+    function obtenerMontosVisita(v) {
+      const incluirIva = v.aplicarIva !== false;
+      return calcularMontos(v.montoNeto || 0, incluirIva);
+    }
+
+    window.generarOrdenVenta = function(id) {
+      const visita = cargarVisitas().find((v) => v.id === id);
+      if (!visita) return;
+
+      const folio = `OV-${String(visita.id).slice(-6)}`;
+      const fechaEmision = new Date().toLocaleString("es-CL", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      });
+      const { neto, iva, total } = obtenerMontosVisita(visita);
+
+      const textoPlano = [
+        `ORDEN DE VENTA: ${folio}`,
+        `Fecha emisión: ${fechaEmision}`,
+        `Cliente: ${visita.cliente || "-"}`,
+        `RUT Cliente: ${visita.rutCliente || "-"}`,
+        `Contacto: ${visita.nombreContacto || "-"}`,
+        `Teléfono: ${visita.telefono || "-"}`,
+        `Correo: ${visita.correo || "-"}`,
+        `Dirección: ${visita.direccion || "-"}`,
+        `Fecha visita: ${formatearFecha(visita.fechaVisita)}`,
+        `Cotización: ${visita.cotizacion || "-"}`,
+        `Monto Neto: ${formatoPesos(neto)}`,
+        `IVA (19%): ${formatoPesos(iva)}`,
+        `Total: ${formatoPesos(total)}`,
+        `Pedido:\n${visita.pedido || visita.requerimientos || "Sin detalle de pedido"}`
+      ].join("\n");
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textoPlano).catch(() => {});
+      }
+
+      const ventana = window.open("", "_blank", "width=740,height=860");
+      if (!ventana) {
+        mostrarEstado("Orden copiada al portapapeles. Permite ventanas emergentes para verla e imprimirla.", false);
+        return;
+      }
+
+      ventana.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Orden de Venta ${escaparHTML(folio)}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              color: #18202c;
+              margin: 28px;
+              line-height: 1.5;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              border-bottom: 2px solid #18202c;
+              padding-bottom: 14px;
+              margin-bottom: 20px;
+            }
+            h1 { margin: 0; font-size: 1.5rem; }
+            .folio { font-weight: 700; color: #155eef; font-size: 1.05rem; }
+            .grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 10px 20px;
+              margin-bottom: 20px;
+            }
+            .box {
+              border: 1px solid #dce2ec;
+              border-radius: 8px;
+              padding: 12px 14px;
+              background: #fafbfd;
+              white-space: pre-wrap;
+              margin-bottom: 16px;
+            }
+            .totales {
+              margin-left: auto;
+              max-width: 320px;
+              border: 1px solid #dce2ec;
+              border-radius: 8px;
+              padding: 12px 14px;
+              background: #f8faff;
+              margin-bottom: 18px;
+            }
+            .totales-row {
+              display: flex;
+              justify-content: space-between;
+              margin: 5px 0;
+            }
+            .totales-final {
+              display: flex;
+              justify-content: space-between;
+              font-weight: 700;
+              font-size: 1.1rem;
+              color: #155eef;
+              border-top: 1px solid #dce2ec;
+              padding-top: 8px;
+              margin-top: 8px;
+            }
+            .label { font-weight: 700; color: #3c4858; }
+            .print-bar { margin-top: 20px; display: flex; gap: 10px; }
+            button {
+              padding: 10px 16px;
+              border-radius: 8px;
+              border: none;
+              font-weight: 600;
+              cursor: pointer;
+              background: #155eef;
+              color: #fff;
+            }
+            @media print { .print-bar { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1>Orden de Venta</h1>
+              <div>Emitida: ${escaparHTML(fechaEmision)}</div>
+            </div>
+            <div class="folio">${escaparHTML(folio)}</div>
+          </div>
+
+          <div class="grid">
+            <div><span class="label">Cliente:</span> ${escaparHTML(visita.cliente || "-")}</div>
+            <div><span class="label">RUT Cliente:</span> ${escaparHTML(visita.rutCliente || "-")}</div>
+            <div><span class="label">Nombre contacto:</span> ${escaparHTML(visita.nombreContacto || "-")}</div>
+            <div><span class="label">Teléfono:</span> ${escaparHTML(visita.telefono || "-")}</div>
+            <div><span class="label">Correo:</span> ${escaparHTML(visita.correo || "-")}</div>
+            <div><span class="label">Dirección:</span> ${escaparHTML(visita.direccion || "-")}</div>
+            <div><span class="label">Fecha visita:</span> ${escaparHTML(formatearFecha(visita.fechaVisita))}</div>
+            <div><span class="label">Cotización:</span> ${escaparHTML(visita.cotizacion || "-")}</div>
+          </div>
+
+          <div class="label">Detalle del pedido</div>
+          <div class="box">${escaparHTML(visita.pedido || "No se especificó pedido.")}</div>
+
+          ${visita.requerimientos ? `<div class="label">Requerimientos / Observaciones</div><div class="box">${escaparHTML(visita.requerimientos)}</div>` : ""}
+
+          <div class="totales">
+            <div class="totales-row"><span>Monto Neto:</span><span>${escaparHTML(formatoPesos(neto))}</span></div>
+            <div class="totales-row"><span>IVA (19%):</span><span>${escaparHTML(formatoPesos(iva))}</span></div>
+            <div class="totales-final"><span>Total:</span><span>${escaparHTML(formatoPesos(total))}</span></div>
+          </div>
+
+          <div class="print-bar">
+            <button onclick="window.print()">Imprimir / Guardar PDF</button>
+          </div>
+        </body>
+        </html>
+      `);
+      ventana.document.close();
+      mostrarEstado(`Orden de venta ${folio} generada para ${visita.cliente}.`);
+    };
+
+    window.descargarCalendario = function(id) {
+      const visita = cargarVisitas().find((v) => v.id === id);
+      if (!visita) return;
+      const inicio = formatoICSFecha(visita.fechaVisita);
+      if (!inicio) {
+        mostrarEstado("La visita no tiene una fecha válida para exportar a calendario.", true);
+        return;
+      }
+      const finDate = new Date(new Date(visita.fechaVisita).getTime() + 60 * 60 * 1000);
+      const fin = formatoICSFecha(finDate.toISOString());
+      const { neto, iva, total } = obtenerMontosVisita(visita);
+
+      const descripcionPartes = [
+        visita.rutCliente ? `RUT: ${visita.rutCliente}` : "",
+        visita.nombreContacto ? `Contacto: ${visita.nombreContacto}` : "",
+        visita.cotizacion ? `Cotización: ${visita.cotizacion}` : "",
+        total > 0 ? `Total orden: ${formatoPesos(total)} (Neto: ${formatoPesos(neto)} / IVA: ${formatoPesos(iva)})` : "",
+        visita.telefono ? `Teléfono: ${visita.telefono}` : "",
+        visita.correo ? `Correo: ${visita.correo}` : "",
+        visita.pedido ? `Pedido:\n${visita.pedido}` : "",
+        visita.requerimientos ? `Requerimientos:\n${visita.requerimientos}` : ""
+      ].filter(Boolean);
+
+      const ics = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Visitas Clientes//ES",
+        "BEGIN:VEVENT",
+        `UID:${visita.id}@visitas-clientes`,
+        `DTSTART:${inicio}`,
+        `DTEND:${fin}`,
+        `SUMMARY:${escaparICS("Visita: " + visita.cliente)}`,
+        visita.direccion ? `LOCATION:${escaparICS(visita.direccion)}` : "",
+        descripcionPartes.length ? `DESCRIPTION:${escaparICS(descripcionPartes.join("\n\n"))}` : "",
+        "END:VEVENT",
+        "END:VCALENDAR"
+      ].filter(Boolean).join("\r\n");
+
+      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `visita-${(visita.cliente || "cliente").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.ics`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
     function renderizar() {
       const visitas = cargarVisitas().sort((a, b) => new Date(a.fechaVisita) - new Date(b.fechaVisita));
       const texto = buscador.value.trim().toLowerCase();
@@ -285,43 +671,65 @@
         if (!texto) return true;
         const blob = [
           v.cliente,
+          v.rutCliente,
+          v.nombreContacto,
           v.correo,
           v.telefono,
           v.direccion,
           v.cotizacion,
+          v.pedido,
           v.requerimientos,
           v.fechaVisita
         ].join(" ").toLowerCase();
         return blob.includes(texto);
       });
 
+      resumen.textContent = `Mostrando ${filtradas.length} de ${visitas.length} visitas registradas.`;
+
       if (!filtradas.length) {
         lista.innerHTML = '<div class="empty">No hay visitas registradas con ese criterio.</div>';
         return;
       }
 
-      lista.innerHTML = filtradas.map((v) => `
-        <div class="visit-item">
-          <div class="visit-top">
-            <h3 class="client-name">${escaparHTML(v.cliente)}</h3>
-            <span class="badge">${escaparHTML(formatearFecha(v.fechaVisita))}</span>
+      lista.innerHTML = filtradas.map((v) => {
+        const { neto, iva, total } = obtenerMontosVisita(v);
+        const tieneMonto = total > 0 || neto > 0;
+        return `
+          <div class="visit-item">
+            <div class="visit-top">
+              <h3 class="client-name">
+                ${escaparHTML(v.cliente)}
+                ${v.pedido ? '<span class="badge-order">Con pedido</span>' : ""}
+              </h3>
+              <span class="badge">${escaparHTML(formatearFecha(v.fechaVisita))}</span>
+            </div>
+            ${v.rutCliente ? `<div class="meta-line"><strong>RUT:</strong> ${escaparHTML(v.rutCliente)}</div>` : ""}
+            ${v.nombreContacto ? `<div class="meta-line"><strong>Contacto:</strong> ${escaparHTML(v.nombreContacto)}</div>` : ""}
+            ${v.correo ? `<div class="meta-line"><strong>Correo:</strong> <a href="mailto:${encodeURIComponent(v.correo)}">${escaparHTML(v.correo)}</a></div>` : ""}
+            ${v.telefono ? `<div class="meta-line"><strong>Teléfono:</strong> <a href="tel:${encodeURIComponent(v.telefono)}">${escaparHTML(v.telefono)}</a></div>` : ""}
+            ${v.direccion ? `<div class="meta-line"><strong>Dirección:</strong> ${escaparHTML(v.direccion)}</div>` : ""}
+            ${v.cotizacion ? `<div class="quote-box">Cotización: ${escaparHTML(v.cotizacion)}</div>` : ""}
+            ${tieneMonto ? `<div class="quote-box">Neto: ${escaparHTML(formatoPesos(neto))} | IVA (19%): ${escaparHTML(formatoPesos(iva))} | Total: ${escaparHTML(formatoPesos(total))}</div>` : ""}
+            ${v.pedido ? `<div class="req-box"><strong>Pedido (Orden de venta):</strong>\n${escaparHTML(v.pedido)}</div>` : ""}
+            ${v.requerimientos ? `<div class="req-box"><strong>Requerimientos:</strong>\n${escaparHTML(v.requerimientos)}</div>` : ""}
+            <div class="actions">
+              <button type="button" class="btn-order" onclick="generarOrdenVenta('${v.id}')">Generar orden de venta</button>
+              <button type="button" class="btn-small" onclick="descargarCalendario('${v.id}')">Agregar a calendario (.ics)</button>
+              <button type="button" class="btn-danger" onclick="eliminarVisita('${v.id}')">Eliminar</button>
+            </div>
           </div>
-          ${v.correo ? `<div class="meta-line"><strong>Correo:</strong> <a href="mailto:${encodeURIComponent(v.correo)}">${escaparHTML(v.correo)}</a></div>` : ""}
-          ${v.telefono ? `<div class="meta-line"><strong>Teléfono:</strong> <a href="tel:${encodeURIComponent(v.telefono)}">${escaparHTML(v.telefono)}</a></div>` : ""}
-          ${v.direccion ? `<div class="meta-line"><strong>Dirección:</strong> ${escaparHTML(v.direccion)}</div>` : ""}
-          ${v.cotizacion ? `<div class="quote-box">Cotización: ${escaparHTML(v.cotizacion)}</div>` : ""}
-          ${v.requerimientos ? `<div class="req-box"><strong>Requerimientos:</strong>\n${escaparHTML(v.requerimientos)}</div>` : ""}
-          <div class="actions">
-            <button type="button" class="btn-danger" onclick="eliminarVisita('${v.id}')">Eliminar</button>
-          </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
     }
 
     window.eliminarVisita = function(id) {
+      const objetivo = cargarVisitas().find((v) => v.id === id);
+      const nombre = objetivo ? objetivo.cliente : "esta visita";
+      if (!confirm(`¿Seguro que deseas eliminar la visita de "${nombre}"?`)) return;
       const restantes = cargarVisitas().filter((v) => v.id !== id);
       guardarVisitas(restantes);
       renderizar();
+      mostrarEstado(`Visita de "${nombre}" eliminada.`);
     };
 
     form.addEventListener("submit", (e) => {
@@ -329,11 +737,16 @@
       const nueva = {
         id: String(Date.now()),
         cliente: document.getElementById("cliente").value.trim(),
+        rutCliente: document.getElementById("rutCliente").value.trim(),
+        nombreContacto: document.getElementById("nombreContacto").value.trim(),
         fechaVisita: document.getElementById("fechaVisita").value,
         correo: document.getElementById("correo").value.trim(),
         telefono: document.getElementById("telefono").value.trim(),
         direccion: document.getElementById("direccion").value.trim(),
         cotizacion: document.getElementById("cotizacion").value.trim(),
+        montoNeto: Math.max(0, Number(montoNetoInput.value) || 0),
+        aplicarIva: aplicarIvaSelect.value === "si",
+        pedido: document.getElementById("pedido").value.trim(),
         requerimientos: document.getElementById("requerimientos").value.trim()
       };
 
@@ -341,7 +754,10 @@
       actuales.push(nueva);
       guardarVisitas(actuales);
       form.reset();
+      aplicarIvaSelect.value = "si";
+      actualizarVistaPreviaMontos();
       renderizar();
+      mostrarEstado(`Visita guardada para ${nueva.cliente}.`);
     });
 
     buscador.addEventListener("input", renderizar);
@@ -356,6 +772,7 @@
       a.download = "respaldo-visitas-clientes.json";
       a.click();
       URL.revokeObjectURL(url);
+      mostrarEstado("Respaldo JSON exportado.");
     });
 
     btnImportTrigger.addEventListener("click", () => importFile.click());
@@ -367,11 +784,16 @@
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result);
-          if (Array.isArray(parsed)) {
-            guardarVisitas(parsed);
-            renderizar();
+          if (!Array.isArray(parsed)) {
+            mostrarEstado("El archivo no contiene una lista válida de visitas.", true);
+            return;
           }
-        } catch (err) {}
+          guardarVisitas(parsed);
+          renderizar();
+          mostrarEstado(`Se importaron ${parsed.length} visitas correctamente.`);
+        } catch (err) {
+          mostrarEstado("No se pudo leer el archivo JSON seleccionado.", true);
+        }
       };
       reader.readAsText(file);
       importFile.value = "";
